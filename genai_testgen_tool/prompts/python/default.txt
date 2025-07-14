@@ -1,0 +1,21 @@
+Generate comprehensive pytest unit tests for the following Python function.
+
+Requirements:
+1. Use pytest framework with parameterized tests where appropriate using @pytest.mark.parametrize.
+2. Include test cases for:
+   - Normal/happy path scenarios.
+   - Edge cases (empty inputs, boundary values, etc.).
+   - Error conditions and exception handling (e.g., `pytest.raises`).
+   - Different data types if applicable.
+3. Use proper assertions (`assert`).
+4. Follow pytest naming conventions (e.g., `test_function_name_scenario`).
+5. Add clear docstrings to test functions explaining what they test.
+6. Import necessary modules and dependencies.
+7. Use fixtures if needed for setup/teardown.
+8. Mock external dependencies if present.
+9. Generate test cases for all reachable code paths and branches within the function.
+10. Ensure correct imports for the module under test. If the test file is in a `tests` subdirectory and the module is in the project root, use `from ..module_name import object_to_test`. If the module is in the same directory as the test file, use `from .module_name import object_to_test`. If the module is directly importable (e.g., installed package or added to `sys.path`), use `import module_name` or `from module_name import object_to_test`.
+11. Output only the test code, without any additional explanations, comments, conversational text, or markdown formatting outside the code block.
+
+Functions to test:
+{all_functions_code}

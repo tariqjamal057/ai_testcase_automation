@@ -1,0 +1,57 @@
+Generate pytest test functions for the Flask routes in the provided source code.
+
+REQUIREMENTS:
+- Import: from app import app
+- Use @pytest.fixture for client setup
+- Test functions must start with "def test_"
+- Use client.get(), client.post() to test routes
+- Include proper assertions for status codes
+- Use realistic form data for POST requests
+- Mock external functions like random.randint(), uuid4(), etc.
+- Use existing data from the app (like blog ID "1")
+
+TEMPLATE:
+```python
+import pytest
+from unittest.mock import patch
+from app import app
+
+@pytest.fixture
+def client():
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        yield client
+
+def test_index(client):
+    response = client.get('/')
+    assert response.status_code == 200
+
+def test_create_get(client):
+    response = client.get('/create')
+    assert response.status_code == 200
+
+@patch('app.random.randint', return_value=123)
+def test_create_post(mock_randint, client):
+    response = client.post('/create', data={{'title': 'Test', 'content': 'Test'}})
+    assert response.status_code == 302
+
+def test_edit_get(client):
+    response = client.get('/1/edit')
+    assert response.status_code == 200
+
+@patch('app.random.randint', return_value=456)
+def test_edit_post(mock_randint, client):
+    response = client.post('/1/edit', data={{'title': 'Updated', 'content': 'Updated'}})
+    assert response.status_code == 302
+
+def test_delete(client):
+    response = client.get('/1/delete')
+    assert response.status_code == 302
+
+def test_get_blog(client):
+    response = client.get('/1')
+    assert response.status_code == 200
+
+SOURCE CODE TO TEST: {{all_functions_code}}
+
+Analyze the routes carefully. Use existing blog ID "1" for testing. Mock random functions. Generate complete test functions for all Flask routes. Return only Python code.
