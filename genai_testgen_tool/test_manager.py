@@ -25,7 +25,6 @@ class TestFileManager:
         
         # Ensure tests directory exists
         os.makedirs(self.tests_dir, exist_ok=True)
-        
         # Create conftest.py first
         conftest_path = self._create_conftest_file()
         if conftest_path:
@@ -149,34 +148,52 @@ def auth_headers():
     def _get_django_conftest(self) -> str:
         """Generate Django-specific conftest.py content."""
         return '''import pytest
-import sys
 import os
-from django.conf import settings
-from django.test import Client
-from django.contrib.auth.models import User
-from django.core.management import execute_from_command_line
+import sys
 
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Configure Django settings if not already configured
+# Set Django settings module if not already set
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
+
+import django
+from django.conf import settings
+
+# Configure Django if settings are not configured
 if not settings.configured:
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
-    try:
-        import django
-        django.setup()
-    except ImportError:
-        pass
+    settings.configure(
+        DEBUG=True,
+        SECRET_KEY='test-secret-key-for-testing-only',
+        DATABASES={
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': ':memory:',
+            }
+        },
+        INSTALLED_APPS=[
+            'django.contrib.auth',
+            'django.contrib.contenttypes',
+            'django.contrib.sessions',
+            'django.contrib.messages',
+            'article',
+        ],
+        USE_TZ=True,
+        ROOT_URLCONF='urls',
+    )
+
+django.setup()
+
+from django.test import Client
+from django.contrib.auth.models import User
 
 @pytest.fixture
 def client():
-    """Django test client."""
     return Client()
 
-    @pytest.fixture
+@pytest.fixture
 @pytest.mark.django_db
 def user():
-    """Create a test user."""
     return User.objects.create_user(
         username='testuser',
         email='test@example.com',
@@ -185,29 +202,12 @@ def user():
 
 @pytest.fixture
 @pytest.mark.django_db
-def admin_user():
-    """Create a test admin user."""
-    return User.objects.create_superuser(
-        username='admin',
-        email='admin@example.com',
-        password='adminpass123'
-    )
-
-@pytest.fixture
-@pytest.mark.django_db
 def authenticated_client(client, user):
-    """Client with authenticated user."""
     client.force_login(user)
     return client
-
-@pytest.fixture
-@pytest.mark.django_db
-def admin_client(client, admin_user):
-    """Client with authenticated admin user."""
-    client.force_login(admin_user)
-    return client
 '''
-    
+
+
     def _get_fastapi_conftest(self) -> str:
         """Generate FastAPI-specific conftest.py content."""
         return '''import pytest
@@ -345,6 +345,37 @@ def mock_config():
         except Exception as e:
             print(f"Error creating test file {test_file_path}: {e}")
             return None
+        
+    def _create_pytest_ini(self) -> str:
+        """Create pytest.ini file for Django configuration."""
+        if self.framework != 'django':
+            return None
+            
+        pytest_ini_path = os.path.join(self.repo_path, 'pytest.ini')
+        
+        if os.path.exists(pytest_ini_path):
+            print(f"pytest.ini already exists at {pytest_ini_path}")
+            return pytest_ini_path
+        
+        pytest_ini_content = '''[tool:pytest]
+DJANGO_SETTINGS_MODULE = settings
+python_files = tests.py test_*.py *_tests.py
+addopts = --tb=short --strict-markers
+markers =
+    django_db: mark test to use django database
+'''
+        
+        try:
+            with open(pytest_ini_path, 'w', encoding='utf-8') as f:
+                f.write(pytest_ini_content)
+            
+            print(f"Created pytest.ini at {pytest_ini_path}")
+            return pytest_ini_path
+        
+        except Exception as e:
+            print(f"Error creating pytest.ini: {e}")
+            return None
+
     
     def _structure_test_code(self, test_code: str, source_file_path: str, test_info: Dict) -> str:
         """Structure the test code with proper imports and formatting."""

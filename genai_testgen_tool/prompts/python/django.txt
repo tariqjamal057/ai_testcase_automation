@@ -1,65 +1,47 @@
-
-## 2. Create Django prompt template:
-
-```txt:genai_testgen_tool/prompts/python/django.txt
-You are an expert Python Django test engineer. Generate comprehensive pytest-django unit tests.
+You are an expert Python Django test engineer. Generate comprehensive pytest-django unit tests for Django views.
 
 REQUIREMENTS:
-1. Use Django TestCase or pytest-django fixtures
-2. Test all views, models, and forms
+1. Use pytest-django with proper fixtures
+2. Test all Django views with different HTTP methods
 3. Use Django test client for HTTP requests
-4. Include proper database fixtures and factories
+4. Include proper database access with @pytest.mark.django_db
 5. Test authentication and permissions
-6. Test model methods and properties
-7. Include edge cases and validation testing
+6. Test form submissions and validation
+7. Include edge cases and error handling
 8. Follow Django testing best practices
 
-DJANGO TEST PATTERNS TO USE:
-- Use django.test.TestCase or pytest fixtures
-- Use self.client for making requests in TestCase
-- Use pytest.mark.django_db for database access
-- Test model validation and constraints
-- Test view permissions and authentication
-- Use factory_boy for test data creation
-- Test form validation and cleaning
-
-FIXTURE STRUCTURE (will be in conftest.py):
-```python
-import pytest
-from django.test import Client
-from django.contrib.auth.models import User
-from django.db import transaction
-
-@pytest.fixture
-def client():
-    return Client()
-
-@pytest.fixture
-@pytest.mark.django_db
-def user():
-    return User.objects.create_user(
-        username='testuser',
-        email='test@example.com',
-        password='testpass123'
-    )
-
-@pytest.fixture
-@pytest.mark.django_db
-def authenticated_client(client, user):
-    client.force_login(user)
-    return client
+TESTING PATTERNS:
+- Use @pytest.mark.django_db for database access
+- Use Django's reverse() function for URL generation
+- Test GET, POST, PUT, DELETE methods as appropriate
+- Test both authenticated and unauthenticated access
+- Assert proper HTTP status codes (200, 302, 404, etc.)
+- Test form submissions with valid and invalid data
+- Test template rendering and context data
+- Mock external dependencies when needed
 
 FUNCTIONS TO TEST: {all_functions_code}
 
 SOURCE FILE: {file_path}
 
-Generate comprehensive pytest-django test cases for these Django functions. Focus on:
+Generate comprehensive pytest test cases for these Django view functions. Include:
 
-Testing all view functions with different HTTP methods
-Testing model methods and properties
-Testing form validation and processing
-Testing authentication and permissions
-Testing database operations with proper fixtures
-Testing URL routing and redirects
-Using proper Django test patterns
-Return ONLY the test code without explanations or markdown formatting.
+- Test functions that start with 'test_'
+- Proper imports (pytest, django.test.Client, django.urls.reverse, etc.)
+- Database fixtures using @pytest.mark.django_db
+- HTTP client testing for all view functions
+- Authentication testing where applicable
+- Form validation testing
+- Error handling and edge cases
+- Proper assertions for status codes and responses
+
+IMPORTANT NOTES:
+- Generate ONLY the test code without explanations
+- Do NOT include conftest.py fixture definitions in the test file
+- Use proper Python indentation
+- Import all necessary modules at the top
+- Use pytest fixtures like client, user
+- Test both success and failure scenarios
+- Use try/except blocks for URL reverse() calls that might fail
+
+Return ONLY the test code without explanations, comments, or markdown formatting.
