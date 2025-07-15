@@ -5,6 +5,8 @@ import click
 import tempfile
 from dotenv import load_dotenv
 
+from genai_testgen_tool.git_manager import GitManager
+
 from .repo_cloner import RepoCloner
 from .language_detector import LanguageDetector
 from .function_extractor import FunctionExtractor
@@ -18,11 +20,13 @@ load_dotenv()
 @click.command()
 @click.option('--repo', required=True, help='GitHub repository URL')
 @click.option('--target-dir', default=None, help='Target directory for cloning (default: temp directory)')
+@click.option('--branch', default='main', help='Branch to use for cloning (default: main)')
+@click.option('--commit-message', default=None, help='Commit message for the generated test files')
 @click.option('--run-tests', is_flag=True, default=True, help='Run tests after generation')
 @click.option('--cleanup', is_flag=True, default=False, help='Clean up cloned repository after completion')
 @click.option('--use-temp', is_flag=True, default=False, help='Use temporary directory for cloning')
 @click.option('--framework', default=None, help='Force specific framework (flask, django, fastapi, general)')
-def main(repo, target_dir, run_tests, cleanup, use_temp, framework):
+def main(repo, target_dir, branch, commit_message, run_tests, cleanup, use_temp, framework):
     """
     GenAI Test Generator Tool - Generate AI-powered test cases for Python repositories.
     
@@ -141,6 +145,53 @@ def main(repo, target_dir, run_tests, cleanup, use_temp, framework):
         click.echo(f"  • Files processed: {len(functions_by_file)}")
         click.echo(f"  • Functions found: {total_functions}")
         click.echo(f"  • Test files created: {len(test_files)}")
+
+        # GitHub push functionality
+        click.echo("🚀 Pushing test files to GitHub...")
+        click.echo()
+        
+        # Use context manager to handle directory navigation
+        # Pass both repo_path and repo_url to GitManager
+        with GitManager(repo_path, repo) as git_manager:
+            # Connect to existing repository
+            if not git_manager.connect_to_existing_repo():
+                click.echo("❌ Failed to connect to Git repository")
+                sys.exit(1)
+            
+            # Ensure origin remote is set correctly
+            if not git_manager.ensure_origin_remote():
+                click.echo("❌ Failed to set up origin remote")
+                sys.exit(1)
+            
+            # Show current status
+            git_manager.show_status()
+            click.echo()
+            
+            # Create branch for test files
+            test_branch = f"test-generation-{branch}"
+            if not git_manager.create_branch(test_branch):
+                click.echo("❌ Failed to create branch")
+                sys.exit(1)
+            
+            # Stage test files
+            if not git_manager.stage_files(test_files):
+                click.echo("❌ Failed to stage test files")
+                sys.exit(1)
+            
+            # Commit test files
+            final_commit_message = commit_message or f"Add AI-generated test files for {final_framework} project"
+            if not git_manager.commit_changes(final_commit_message):
+                click.echo("❌ Failed to commit changes")
+                sys.exit(1)
+            
+            # Push to GitHub (use origin as the remote)
+            if not git_manager.push_to_remote(test_branch, 'origin'):
+                click.echo("❌ Failed to push to GitHub")
+                sys.exit(1)
+            
+            click.echo(f"✅ Successfully pushed test files to origin on branch '{test_branch}'")
+            click.echo(f"🔗 You can view the changes at: {repo}/tree/{test_branch}")
+            click.echo()
         
     except Exception as e:
         click.echo(f"❌ Error: {e}")
