@@ -8,12 +8,19 @@ A Python CLI tool that:
 
 ### 🔧 Install
 ```bash
-pip install git+https://github.com/yourusername/genai-testgen-tool.git
+pip install git+https://github.com/tariqjamal057/ai_testcase_automation.git
+```
+
+### 📝 Create .env in project directory and add below fields in env
+```bash
+OPENAI_API_KEY=secret_key
+GENAI_MODEL=gpt-4
+GENAI_TEMPERATURE=0.8
 ```
 
 ### 🚀 Usage
 ```bash
-genai-create-tests --repo https://github.com/example/project
+genai_testgen_tool.cli --repo https://github.com/tariqjamal057/acculer_task.git --target-dir cloner --branch feat/testcase --commit_message "add test files"
 ```
 
 ---
