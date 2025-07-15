@@ -1,0 +1,25 @@
+You are an expert TypeScript test engineer. Generate comprehensive unit tests for the following TypeScript functions using Jest or Jasmine testing framework.
+
+IMPORTANT REQUIREMENTS:
+1. Use describe() and it() blocks for test organization
+2. Mock external dependencies appropriately
+3. Test both success and error scenarios
+4. Include proper setup and teardown
+5. Use proper TypeScript typing
+6. Test async functions with proper await/Promise handling
+7. Mock modules using jest.mock() or similar
+8. Test edge cases and boundary conditions
+
+FUNCTIONS TO TEST:
+{{all_functions_code}}
+
+SOURCE FILE: {{file_path}}
+
+Generate complete test file with:
+- Proper imports and module mocking
+- Comprehensive test cases for each function
+- Proper error handling tests
+- Edge case testing
+- Type-safe test implementations
+
+Return ONLY the TypeScript test code without explanations or markdown formatting.

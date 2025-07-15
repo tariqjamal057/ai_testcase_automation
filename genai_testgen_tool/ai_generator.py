@@ -45,42 +45,61 @@ class AITestGenerator:
         with open(prompt_path, "r", encoding="utf-8") as f:
             return f.read()
 
-    def _detect_framework_with_ai(self, functions_by_file):
+    def _detect_framework_with_ai(self, functions_by_file, language):
         """Use AI to detect the framework based on function patterns."""
         try:
             # Collect sample code from functions
             sample_code = ""
-            for file_path, functions in list(functions_by_file.items())[
-                :3
-            ]:  # Sample first 3 files
-                for func in functions[:2]:  # Sample first 2 functions per file
-                    sample_code += f"{func['source_code']}\n\n"
-
-            prompt = f"""
-            Analyze the following Python code and determine the web framework being used.
-            Return ONLY the framework name in lowercase (flask, django, fastapi, or general).
             
-            Code to analyze:
-            {sample_code[:2000]}  # Limit to first 2000 chars
-            """
+            if language == 'python':
+                for file_path, functions in list(functions_by_file.items())[:3]:  # Sample first 3 files
+                    for func in functions[:2]:  # Sample first 2 functions per file
+                        sample_code += f"{func['source_code']}\n\n"
+                
+                prompt = f"""
+                Analyze the following Python code and determine the web framework being used.
+                Return ONLY the framework name in lowercase (flask, django, fastapi, or general).
+                
+                Code to analyze:
+                {sample_code[:2000]}  # Limit to first 2000 chars
+                """
+                
+                valid_frameworks = ["flask", "django", "fastapi", "general"]
+                
+            elif language == 'typescript':
+                for file_path, functions in list(functions_by_file.items())[:3]:  # Sample first 3 files
+                    for func in functions[:2]:  # Sample first 2 functions per file
+                        sample_code += f"{func['source_code']}\n\n"
+                
+                prompt = f"""
+                Analyze the following TypeScript/Angular code and determine if it's an Angular project.
+                Return ONLY 'angular' if it's Angular, or 'general' if it's generic TypeScript.
+                
+                Code to analyze:
+                {sample_code[:2000]}  # Limit to first 2000 chars
+                """
+                
+                valid_frameworks = ["angular", "general"]
+            
+            else:
+                return "general"
 
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a Python framework detection expert. Analyze code and return only the framework name: flask, django, fastapi, or general.",
+                        "content": f"You are a {language} framework detection expert. Analyze code and return only the framework name from the valid options.",
                     },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.1,
-                max_tokens=50,
+                max_tokens=7000,
             )
 
             detected_framework = response.choices[0].message.content.strip().lower()
 
             # Validate the response
-            valid_frameworks = ["flask", "django", "fastapi", "general"]
             if detected_framework in valid_frameworks:
                 print(f"AI detected framework: {detected_framework}")
                 return detected_framework
@@ -108,19 +127,29 @@ class AITestGenerator:
             str: Generated test code for all functions
         """
         try:
-            # # Load the appropriate prompt template
-            # if not self.prompt_template:
-            #     self.prompt_template = self._load_prompt_template(language, framework)
-
             # Prepare all functions code with better formatting
             all_functions_code = ""
-            for i, func in enumerate(functions, 1):
-                all_functions_code += f"\n# Function {i}: {func['name']}\n"
-                all_functions_code += f"# Arguments: {func['args']}\n"
-                if func["docstring"]:
-                    all_functions_code += f"# Docstring: {func['docstring']}\n"
-                all_functions_code += f"```python\n{func['source_code']}\n```\n"
-                all_functions_code += "-" * 50 + "\n"
+            
+            if language == 'python':
+                for i, func in enumerate(functions, 1):
+                    all_functions_code += f"\n# Function {i}: {func['name']}\n"
+                    all_functions_code += f"# Arguments: {func['args']}\n"
+                    if func["docstring"]:
+                        all_functions_code += f"# Docstring: {func['docstring']}\n"
+                    all_functions_code += f"```python\n{func['source_code']}\n```\n"
+                    all_functions_code += "-" * 50 + "\n"
+            
+            elif language == 'typescript':
+                for i, func in enumerate(functions, 1):
+                    all_functions_code += f"\n# {func['type'].title()} {i}: {func['name']}\n"
+                    if func['type'] in ['component', 'service']:
+                        all_functions_code += f"# Type: Angular {func['type']}\n"
+                        if 'methods' in func:
+                            all_functions_code += f"# Methods: {[m['name'] for m in func['methods']]}\n"
+                    elif func['type'] == 'function':
+                        all_functions_code += f"# Arguments: {func.get('args', '')}\n"
+                    all_functions_code += f"```typescript\n{func['source_code']}\n```\n"
+                    all_functions_code += "-" * 50 + "\n"
 
             # Prepare the prompt
             print(language)
@@ -136,12 +165,20 @@ class AITestGenerator:
 
             # Generate framework-specific system message
             system_messages = {
+                # Python frameworks
                 "flask": "You are an expert Python Flask test engineer. Generate high-quality pytest unit tests for Flask applications using proper test client patterns. Mock external functions like random.randint(), uuid4(), datetime.now(), etc. using unittest.mock.patch. Use existing data from the application for testing. You MUST return ONLY valid Python test code. Do NOT provide explanations, comments, or ask questions. Generate test functions that start with 'def test_' and use client.get(), client.post(), etc. to test the provided Flask routes.",
                 "django": "You are an expert Python Django test engineer. Generate high-quality pytest-django unit tests using proper Django test patterns. Return only the test code without any explanations or markdown formatting.",
                 "fastapi": "You are an expert Python FastAPI test engineer. Generate high-quality pytest unit tests for FastAPI applications using TestClient. Return only the test code without any explanations or markdown formatting.",
-                "general": "You are an expert Python test engineer. Generate high-quality pytest unit tests. Return only the test code without any explanations or markdown formatting.",
+                
+                # Angular framework
+                "angular": "You are an expert Angular TypeScript test engineer. Generate high-quality Jasmine unit tests for Angular applications using TestBed and Angular testing utilities. Mock dependencies appropriately and test component lifecycle methods. Return only the TypeScript test code without any explanations or markdown formatting.",
+                "general": f"You are an expert {language} test engineer. Generate high-quality unit tests using appropriate testing frameworks. Return only the test code without any explanations or markdown formatting.",
+
             }
 
+            # Default system message for unknown frameworks
+            default_system_message = f"You are an expert {language} test engineer. Generate high-quality unit tests. Return only the test code without any explanations or markdown formatting."
+            
             system_message = system_messages.get(framework, system_messages["general"])
 
             # Generate test using OpenAI
@@ -152,7 +189,7 @@ class AITestGenerator:
                     {"role": "user", "content": prompt},
                 ],
                 temperature=self.temperature,
-                max_tokens=4000,
+                # max_tokens=4000,
             )
 
             test_code = response.choices[0].message.content
@@ -174,7 +211,13 @@ class AITestGenerator:
     def _clean_ai_response(self, response):
         """Clean the AI response to extract only the test code."""
         # Remove markdown code blocks
-        if "```python" in response:
+        if "```typescript" in response:
+            # Extract content between ```typescript and ```
+            start = response.find("```typescript") + 13
+            end = response.find("```", start)
+            if end != -1:
+                response = response[start:end]
+        elif "```python" in response:
             # Extract content between ```python and ```
             start = response.find("```python") + 9
             end = response.find("```", start)
@@ -194,6 +237,7 @@ class AITestGenerator:
         error_phrases = [
             "Sorry, you didn't provide",
             "Please provide a Python function",
+            "Please provide a TypeScript function",
             "I need the function code",
             "No function provided",
             "In order to provide",
@@ -222,7 +266,7 @@ class AITestGenerator:
         """
         # Use AI to detect framework if not already detected or if it's 'general'
         if framework == "general" or framework == "unknown":
-            framework = self._detect_framework_with_ai(functions_by_file)
+            framework = self._detect_framework_with_ai(functions_by_file, language)
 
         generated_tests = {}
 
@@ -245,6 +289,7 @@ class AITestGenerator:
                     "functions": functions,
                     "file_path": file_path,
                     "framework": framework,
+                    "language": language,
                 }
                 print(
                     f"✅ Generated tests for {len(functions)} functions in {os.path.basename(file_path)}"

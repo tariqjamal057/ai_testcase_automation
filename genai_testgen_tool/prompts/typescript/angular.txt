@@ -1,0 +1,29 @@
+You are an expert Angular test engineer. Generate comprehensive unit tests for the following Angular TypeScript functions using Jasmine and Angular Testing Utilities.
+
+IMPORTANT REQUIREMENTS:
+1. Use Jasmine testing framework with describe() and it() blocks
+2. Use Angular TestBed for component testing
+3. Import necessary Angular testing utilities
+4. Mock dependencies using jasmine.createSpy() or jasmine.createSpyObj()
+5. Test both success and error scenarios
+6. Include proper setup and teardown in beforeEach() and afterEach()
+7. Use proper TypeScript typing
+8. Test component lifecycle methods if present
+9. Mock HTTP calls using HttpClientTestingModule
+10. Test form validation if applicable
+
+FUNCTIONS TO TEST:
+{{all_functions_code}}
+
+SOURCE FILE: {{file_path}}
+
+Generate complete test file with:
+- Proper imports for Angular testing
+- TestBed configuration
+- Component/service instantiation
+- Comprehensive test cases for each function
+- Proper mocking of dependencies
+- Error handling tests
+- Edge case testing
+
+Return ONLY the TypeScript test code without explanations or markdown formatting.

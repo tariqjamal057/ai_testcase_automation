@@ -1,5 +1,6 @@
 import os
 import json
+from pathlib import Path
 from typing import Tuple
 
 class LanguageDetector:
@@ -42,20 +43,74 @@ class LanguageDetector:
         Returns:
             Tuple[str, str]: (language, framework)
         """
+
+        # Check for Angular/TypeScript first
+        if self._is_angular_project(repo_path):
+            return 'typescript', 'angular'
+
         # Check for Python files
         if self._has_python_files(repo_path):
             framework = self._detect_python_framework(repo_path)
             return 'python', framework
         
         # Check for other languages (future expansion)
-        if self._has_javascript_files(repo_path):
-            return 'javascript', 'general'
+        # if self._has_javascript_files(repo_path):
+        #     return 'javascript', 'general'
         
-        if self._has_csharp_files(repo_path):
-            return 'csharp', 'general'
+        # if self._has_csharp_files(repo_path):
+        #     return 'csharp', 'general'
         
         return 'unknown', 'general'
     
+    def _is_angular_project(self, repo_path):
+        """Check if the repository is an Angular project."""
+        # Check for package.json with Angular dependencies
+        package_json_path = os.path.join(repo_path, 'package.json')
+        if os.path.exists(package_json_path):
+            try:
+                with open(package_json_path, 'r', encoding='utf-8') as f:
+                    package_data = json.load(f)
+                
+                # Check dependencies and devDependencies for Angular
+                dependencies = package_data.get('dependencies', {})
+                dev_dependencies = package_data.get('devDependencies', {})
+                all_deps = {**dependencies, **dev_dependencies}
+                
+                angular_indicators = [
+                    '@angular/core',
+                    '@angular/cli',
+                    '@angular/common',
+                    '@angular/platform-browser'
+                ]
+                
+                if any(dep in all_deps for dep in angular_indicators):
+                    return True
+            except (json.JSONDecodeError, FileNotFoundError):
+                pass
+        
+        # Check for angular.json
+        if os.path.exists(os.path.join(repo_path, 'angular.json')):
+            return True
+        
+        # Check for TypeScript files with Angular patterns
+        ts_files = list(Path(repo_path).rglob('*.ts'))
+        if ts_files:
+            for ts_file in ts_files[:5]:  # Check first 5 TS files
+                try:
+                    with open(ts_file, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        if any(pattern in content for pattern in [
+                            '@Component',
+                            '@Injectable',
+                            '@NgModule',
+                            'import { Component }',
+                            'import { Injectable }'
+                        ]):
+                            return True
+                except:
+                    continue
+        
+        return False
     def _has_python_files(self, repo_path: str) -> bool:
         """Check if repository contains Python files."""
         for root, dirs, files in os.walk(repo_path):
