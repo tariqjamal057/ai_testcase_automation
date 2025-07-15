@@ -17,5 +17,3 @@ genai-create-tests --repo https://github.com/example/project
 ```
 
 ---
-
-Let me know if you'd like to add Angular (`Jasmine`) and .NET (`xUnit`) logic next.
