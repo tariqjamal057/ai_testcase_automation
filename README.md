@@ -20,7 +20,7 @@ GENAI_TEMPERATURE=0.8
 
 ### 🚀 Usage
 ```bash
-genai_testgen_tool.cli --repo https://github.com/tariqjamal057/acculer_task.git --target-dir cloner --branch feat/testcase --commit_message "add test files"
+genai-create-tests --repo https://github.com/tariqjamal057/acculer_task.git --target-dir cloner --branch feat/testcase --commit-message "add test files"
 ```
 
 ---
