@@ -8,11 +8,11 @@ class GitManager:
     """Manages Git operations for pushing test code to GitHub."""
     
     def __init__(self, repo_path: str, repo_url: str):
-        self.repo_path = repo_path
         self.repo_url = repo_url
         self.repo = None
         self.original_cwd = os.getcwd()
-        
+        self.repo_path = os.path.join(self.original_cwd, repo_path)
+
     def __enter__(self):
         """Context manager entry - navigate to repo directory."""
         os.chdir(self.repo_path)
@@ -150,20 +150,22 @@ class GitManager:
             
             staged_files = []
             for file_path in files:
-                # Convert absolute path to relative path from repo root
-                if os.path.isabs(file_path):
+                if file_path.startswith(os.path.basename(self.repo_path) + os.sep):
+                    rel_path = file_path[len(os.path.basename(self.repo_path)) + 1:]
+                elif os.path.isabs(file_path):
                     rel_path = os.path.relpath(file_path, self.repo_path)
                 else:
                     rel_path = file_path
                 
-                # Check if file exists
+                git_path = rel_path.replace('\\', '/')
                 full_path = os.path.join(self.repo_path, rel_path)
+                print(f"Staging file: {git_path}")
                 if os.path.exists(full_path):
-                    self.repo.index.add([rel_path])
-                    staged_files.append(rel_path)
-                    print(f"📝 Staged: {rel_path}")
+                    self.repo.index.add([git_path])
+                    staged_files.append(git_path)
+                    print(f"📝 Staged: {git_path}")
                 else:
-                    print(f"⚠️ File not found: {rel_path}")
+                    print(f"⚠️ File not found: {git_path}")
             
             if staged_files:
                 print(f"✅ Staged {len(staged_files)} files")
@@ -175,7 +177,7 @@ class GitManager:
         except Exception as e:
             print(f"❌ Error staging files: {e}")
             return False
-    
+
     def commit_changes(self, commit_message: str) -> bool:
         """Commit staged changes."""
         try:

@@ -292,7 +292,7 @@ def main(repo, target_dir, branch, commit_message, run_tests, cleanup, use_temp,
             click.echo()
             
             # Create branch for test files
-            test_branch = f"test-generation-{branch}-{language}"
+            test_branch = f"test-generation-{language}" if not branch else branch
             if not git_manager.create_branch(test_branch):
                 click.echo("❌ Failed to create branch")
                 sys.exit(1)
