@@ -12,6 +12,7 @@ class AngularTestFileManager:
         self.repo_path = repo_path
         self.framework = framework
         self.src_path = os.path.join(repo_path, 'src', 'app')
+        self.npm_path = os.environ.get('NPM_BIN_PATH', 'npm')
     
     def _run_command(self, cmd_list, **kwargs):
         """Run a command with proper Windows handling."""
@@ -45,8 +46,8 @@ class AngularTestFileManager:
             
             # Test npm
             print("🔍 Testing npm...")
-            npm_result = self._run_command(['npm', '--version'], timeout=10)
-            
+            npm_result = self._run_command([self.npm_path, '--version'], timeout=10)
+
             if not npm_result or npm_result.returncode != 0:
                 print("❌ npm not accessible")
                 print("Please ensure npm is installed and accessible from command line")
@@ -80,7 +81,7 @@ class AngularTestFileManager:
             print(f"Working directory: {self.repo_path}")
             
             result = self._run_command(
-                ['npm', 'install'],
+                [self.npm_path, 'install'],
                 cwd=self.repo_path,
                 timeout=300  # 5 minutes timeout
             )
@@ -130,7 +131,7 @@ class AngularTestFileManager:
             missing_packages = []
             for package in required_packages:
                 check_result = self._run_command(
-                    ['npm', 'list', package],
+                    [self.npm_path, 'list', package],
                     cwd=self.repo_path,
                     timeout=30
                 )
@@ -140,7 +141,7 @@ class AngularTestFileManager:
             if missing_packages:
                 print(f"📦 Installing missing test dependencies: {missing_packages}")
                 install_result = self._run_command(
-                    ['npm', 'install', '--save-dev'] + missing_packages,
+                    [self.npm_path, 'install', '--save-dev'] + missing_packages,
                     cwd=self.repo_path,
                     timeout=180
                 )

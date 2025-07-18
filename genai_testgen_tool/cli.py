@@ -26,11 +26,13 @@ from .test_runner import TestRunner
 def check_prerequisites(language, framework):
     """Check if required tools are available."""
     missing_tools = []
+    NODE_PATH = os.environ.get('NODE_PATH', 'node')
+    NPM_BIN_PATH = os.environ.get('NPM_BIN_PATH', 'npm')
     
     if language == 'typescript' and framework == 'angular':
         # Test Node.js
         try:
-            result = subprocess.run(['node', '--version'], 
+            result = subprocess.run([os.environ.get(NODE_PATH, 'node'), '--version'], 
                                   capture_output=True, text=True, timeout=10, shell=True)
             if result.returncode != 0:
                 missing_tools.append('Node.js')
@@ -43,10 +45,10 @@ def check_prerequisites(language, framework):
         
         # Test npm
         try:
-            result = subprocess.run(['npm', '--version'], 
+            result = subprocess.run([NPM_BIN_PATH, '--version'], 
                                   capture_output=True, text=True, timeout=10, shell=True)
             if result.returncode != 0:
-                missing_tools.append('npm')
+                missing_tools.append(NPM_BIN_PATH)
             else:
                 print(f"✅ npm version: {result.stdout.strip()}")
         except subprocess.TimeoutExpired:
@@ -88,6 +90,7 @@ def main(repo, target_dir, branch, commit_message, run_tests, cleanup, use_temp,
     cloner = RepoCloner()
     
     try:
+        main_directory = os.getcwd()
         # Use temporary directory if requested or if target_dir causes issues
         if use_temp or target_dir is None:
             temp_dir = tempfile.mkdtemp(prefix='genai_testgen_')
@@ -132,7 +135,7 @@ def main(repo, target_dir, branch, commit_message, run_tests, cleanup, use_temp,
         # Step 3: Install dependencies based on language
         if language == 'typescript' and final_framework == 'angular':
             click.echo("📦 Setting up Angular dependencies...")
-            dep_manager = AngularDependencyManager(repo_path)
+            dep_manager = AngularDependencyManager(repo_path, main_directory)
             
             if not dep_manager.install_dependencies():
                 click.echo("❌ Failed to install dependencies. Continuing anyway...")

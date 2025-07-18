@@ -45,10 +45,10 @@ class RepoCloner:
             
             self.cloned_repos.append(target_dir)
             # add init file in root fodler
-            init_file_path = os.path.join(target_dir, '__init__.py')
-            if not os.path.exists(init_file_path):
-                with open(init_file_path, 'w') as init_file:
-                    init_file.write('# This is an init file for the cloned repository\n')
+            # init_file_path = os.path.join(target_dir, '__init__.py')
+            # if not os.path.exists(init_file_path):
+            #     with open(init_file_path, 'w') as init_file:
+            #         init_file.write('# This is an init file for the cloned repository\n')
             print(f"Successfully cloned repository to: {target_dir}")
             
             return target_dir

@@ -6,9 +6,12 @@ import sys
 class AngularDependencyManager:
     """Manages Angular project dependencies and setup."""
     
-    def __init__(self, repo_path):
+    def __init__(self, repo_path, main_directory):
         self.repo_path = repo_path
-        self.package_json_path = os.path.join(repo_path, 'package.json')
+        self.main_directory = os.path.join(main_directory, repo_path)
+        self.package_json_path = os.path.join(self.main_directory, 'package.json')
+
+        self.npm_path = os.environ.get('NPM_BIN_PATH', 'npm')
     
     def install_dependencies(self):
         """Install Angular project dependencies."""
@@ -27,7 +30,7 @@ class AngularDependencyManager:
             try:
                 # Try npm install first
                 result = subprocess.run(
-                    ['npm', 'install'],
+                    [self.npm_path, 'install'],
                     capture_output=True,
                     text=True,
                     timeout=300  # 5 minutes timeout
@@ -89,7 +92,7 @@ class AngularDependencyManager:
             missing_deps = []
             for dep, version in required_test_deps.items():
                 if dep not in all_deps:
-                    missing_deps.append(f"{dep}@{version}")
+                    missing_deps.append(f"{dep}")
             
             if missing_deps:
                 print(f"📦 Installing missing test dependencies: {missing_deps}")
@@ -110,7 +113,7 @@ class AngularDependencyManager:
             
             try:
                 dev_flag = ['--save-dev'] if dev else ['--save']
-                cmd = ['npm', 'install'] + dev_flag + packages
+                cmd = [self.npm_path, 'install'] + dev_flag + packages
                 
                 result = subprocess.run(
                     cmd,
