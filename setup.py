@@ -15,6 +15,7 @@ setup(
     entry_points={
         "console_scripts": [
             "genai-create-tests=genai_testgen_tool.cli:main",
+            "genai-testgen-tool=genai_testgen_tool.cli:main",  # Add this line
         ],
     },
     author="GenAI TestGen Tool",
