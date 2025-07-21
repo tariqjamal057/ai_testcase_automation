@@ -10,11 +10,12 @@ load_dotenv()
 class AITestGenerator:
     """Generates test cases using OpenAI's GPT model."""
 
-    def __init__(self):
+    def __init__(self, prompt: str = None):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.model = os.getenv("GENAI_MODEL", "gpt-4")
         self.temperature = float(os.getenv("GENAI_TEMPERATURE", "0.2"))
         self.prompt_template = None
+        self.custom_prompt = prompt
 
     def _load_prompt_template(self, language, framework):
         """
@@ -154,7 +155,7 @@ class AITestGenerator:
             # Prepare the prompt
             print(language)
             print(framework)
-            prompt_template = self._load_prompt_template(language, framework)
+            prompt_template = self._load_prompt_template(language, framework) if not self.custom_prompt else self.custom_prompt
             print(f"promt {prompt_template=}")
             prompt = prompt_template.format(
                 all_functions_code=all_functions_code, file_path=file_path

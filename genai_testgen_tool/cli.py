@@ -64,12 +64,13 @@ load_dotenv()
 @click.option('--target-dir', default=None, help='Target directory for cloning (default: temp directory)')
 @click.option('--branch', default='main', help='Branch to use for cloning (default: main)')
 @click.option('--commit-message', default=None, help='Commit message for the generated test files')
+@click.option('--prompt', default=None, help='Custom prompt for AI test generation')
 @click.option('--run-tests', is_flag=True, default=True, help='Run tests after generation')
 @click.option('--cleanup', is_flag=True, default=False, help='Clean up cloned repository after completion')
 @click.option('--use-temp', is_flag=True, default=False, help='Use temporary directory for cloning')
 @click.option('--framework', default=None, help='Force specific framework (flask, django, fastapi, angular, general)')
 @click.option('--skip-deps', is_flag=True, default=False, help='Skip dependency installation')
-def main(repo, target_dir, branch, commit_message, run_tests, cleanup, use_temp, framework, skip_deps):
+def main(repo, target_dir, branch, commit_message, prompt, run_tests, cleanup, use_temp, framework, skip_deps):
     """
     GenAI Test Generator Tool - Generate AI-powered test cases for Python and Angular repositories.
     
@@ -173,9 +174,9 @@ def main(repo, target_dir, branch, commit_message, run_tests, cleanup, use_temp,
         
         # Step 5: Generate tests using AI for all files
         click.echo("🤖 Generating test cases using AI...")
-        ai_generator = AITestGenerator()
+        ai_generator = AITestGenerator(prompt)
         generated_tests = ai_generator.generate_tests_for_functions(functions_by_file, language, final_framework)
-        
+
         if not generated_tests:
             click.echo("❌ No tests were generated.")
             return
