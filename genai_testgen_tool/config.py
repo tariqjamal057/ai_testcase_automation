@@ -7,9 +7,9 @@ class Config:
     """Configuration class for the tool."""
     
     # OpenAI Configuration
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', "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")
     OPENAI_MODEL = os.getenv('GENAI_MODEL', 'gpt-4')
-    OPENAI_TEMPERATURE = float(os.getenv('GENAI_TEMPERATURE', '0.2'))
+    OPENAI_TEMPERATURE = float(os.getenv('GENAI_TEMPERATURE', '0.6'))
     OPENAI_MAX_TOKENS = int(os.getenv('GENAI_MAX_TOKENS', '2000'))
     
     # Test Configuration

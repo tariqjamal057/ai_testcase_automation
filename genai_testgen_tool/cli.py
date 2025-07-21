@@ -81,10 +81,10 @@ def main(repo, target_dir, branch, commit_message, prompt, run_tests, cleanup, u
     """
     
     # Check for OpenAI API key
-    if not os.getenv('OPENAI_API_KEY'):
-        click.echo("Error: OPENAI_API_KEY environment variable is required.")
-        click.echo("Please set your OpenAI API key in the .env file or environment variables.")
-        sys.exit(1)
+    # if not os.getenv('OPENAI_API_KEY'):
+    #     click.echo("Error: OPENAI_API_KEY environment variable is required.")
+    #     click.echo("Please set your OpenAI API key in the .env file or environment variables.")
+    #     sys.exit(1)
     
     cloner = RepoCloner()
     
