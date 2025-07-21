@@ -5,6 +5,8 @@ import click
 import tempfile
 from dotenv import load_dotenv
 
+from genai_testgen_tool.codeql_manager import CodeQLManager
+
 from .angular_dependency_manager import AngularDependencyManager
 from .angular_extractor import AngularExtractor
 from .angular_test_manager import AngularTestFileManager
@@ -14,13 +16,9 @@ from genai_testgen_tool.git_manager import GitManager
 from .repo_cloner import RepoCloner
 from .language_detector import LanguageDetector
 from .function_extractor import FunctionExtractor
-# from .angular_extractor import AngularExtractor
 from .ai_generator import AITestGenerator
 from .test_manager import TestFileManager
-# from .angular_test_manager import AngularTestFileManager
 from .test_runner import TestRunner
-# from .angular_test_runner import AngularTestRunner
-# from .angular_dependency_manager import AngularDependencyManager
 
 
 def check_prerequisites(language, framework):
@@ -261,6 +259,20 @@ def main(repo, target_dir, branch, commit_message, run_tests, cleanup, use_temp,
             click.echo(f"📁 Tests location: {os.path.join(repo_path, 'src', 'app')} (*.spec.ts files)")
             if os.path.exists(os.path.join(repo_path, 'coverage')):
                 click.echo(f"📊 Coverage report: {os.path.join(repo_path, 'coverage', 'index.html')}")
+
+        # Step 8: Ensure CodeQL workflow exists
+        click.echo("🔍 Checking CodeQL workflow...")
+        codeql_manager = CodeQLManager(repo_path)
+        
+        if not codeql_manager.ensure_codeql_workflow(language, final_framework):
+            click.echo("⚠️ Warning: Failed to create CodeQL workflow")
+        else:
+            # Add CodeQL workflow to test files if it was created
+            codeql_file = codeql_manager.get_workflow_file_path()
+            if os.path.exists(codeql_file) and codeql_file not in test_files:
+                test_files.append(codeql_file)
+                click.echo(f"📝 Added CodeQL workflow to commit: {os.path.relpath(codeql_file, repo_path)}")
+
         
         # Summary statistics
         click.echo("\n📊 Summary:")
